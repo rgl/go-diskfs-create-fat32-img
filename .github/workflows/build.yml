@@ -1,0 +1,54 @@
+name: Build
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21.5'
+      - name: Setup wasmtime
+        uses: bytecodealliance/actions/wasmtime/setup@v1
+        with:
+          version: 'v16.0.0'
+      - name: Setup wasmer
+        uses: wasmerio/setup-wasmer@v2
+        with:
+          version: 'v4.2.5'
+      - name: Build Native
+        run: |
+          set -euxo pipefail
+          go build
+      - name: Build WebAssembly
+        run: |
+          set -euxo pipefail
+          GOOS=wasip1 GOARCH=wasm go build -o go-diskfs-create-fat32-img.wasm
+      - name: Create test file
+        run: |
+          set -euxo pipefail
+          dd if=/dev/urandom of=Setup.bin bs=123456 count=1
+      - name: Test Native
+        run: |
+          set -euxo pipefail
+          ./go-diskfs-create-fat32-img
+          file Setup.bin.img
+          fdisk -l Setup.bin.img
+          rm Setup.bin.img
+      - name: Test WebAssembly/wasmtime
+        run: |
+          set -euxo pipefail
+          wasmtime --version
+          wasmtime run --dir .::/ go-diskfs-create-fat32-img.wasm
+          file Setup.bin.img
+          fdisk -l Setup.bin.img
+          rm Setup.bin.img
+      - name: Test WebAssembly/wasmer
+        run: |
+          set -euxo pipefail
+          wasmer --version
+          wasmer run --mapdir .::/ go-diskfs-create-fat32-img.wasm
+          file Setup.bin.img
+          fdisk -l Setup.bin.img
+          rm Setup.bin.img

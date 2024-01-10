@@ -32,10 +32,13 @@ wasmtime run --dir .::/ go-diskfs-create-fat32-img.wasm
 
 Build and execute with [wasmer](https://github.com/wasmerio/wasmer):
 
+**NB** The `wasmer` directory mapping declaration order is different than
+`wasmtime` and `docker`, it's `--mapdir <GUEST_DIR:HOST_DIR>`.
+
 ```bash
 GOOS=wasip1 GOARCH=wasm go build -o go-diskfs-create-fat32-img.wasm
 dd if=/dev/urandom of=Setup.bin bs=123456 count=1 && rm -f Setup.bin.img
-wasmer run --mapdir .::/ go-diskfs-create-fat32-img.wasm
+wasmer run --mapdir /::. go-diskfs-create-fat32-img.wasm
 ```
 
 **NB** This currently fails with the error (see https://github.com/wasmerio/wasmer/issues/4384):

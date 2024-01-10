@@ -48,7 +48,7 @@ jobs:
         run: |
           set -euxo pipefail
           wasmer --version
-          wasmer run --mapdir .::/ go-diskfs-create-fat32-img.wasm
+          wasmer run --mapdir /::. go-diskfs-create-fat32-img.wasm
           file Setup.bin.img
           fdisk -l Setup.bin.img
           rm Setup.bin.img
